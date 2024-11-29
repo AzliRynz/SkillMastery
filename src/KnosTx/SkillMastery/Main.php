@@ -153,19 +153,4 @@ class Main extends PluginBase{
             $player->setMovementSpeed(0.1 + $level * 0.01);
         }
     }
-
-    public function onPlayerFish(PlayerFishEvent $event) : void{
-        $player = $event->getPlayer();
-        $name = $player->getName();
-        $playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
-
-        if (isset($playerData["skills"]["fishing"])) {
-            $level = $playerData["skills"]["fishing"]["level"] ?? 0;
-            $chance = mt_rand(0, 100);
-            if ($chance < 5 * $level) {
-                $this->addXP($player, 50);
-                $player->sendMessage("You caught a rare fish!");
-            }
-        }
-    }
 }
