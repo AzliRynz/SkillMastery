@@ -45,7 +45,7 @@ class Main extends PluginBase{
         $name = $player->getName();
         $playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
 
-        $form = new SimpleForm(function(Player $player, ?int $data) use ($playerData){
+        $form = new SimpleForm(function(Player $player, ?int $data){
             if ($data === null) return;
 
             $skills = array_keys($this->skillsConfig->get("skills", []));
@@ -69,7 +69,7 @@ class Main extends PluginBase{
         $currentLevel = $playerData["skills"][$skill]["level"] ?? 0;
         $xpNeeded = $this->skillsConfig->getNested("skills.$skill.levels")[$currentLevel + 1] ?? null;
 
-        $form = new SimpleForm(function(Player $player, ?int $data) use ($skill, $currentLevel){
+        $form = new SimpleForm(function(Player $player, ?int $data) use ($skill){
             if ($data === null) return;
 
             if ($data === 0) $this->upgradeSkill($player, $skill);
@@ -131,15 +131,18 @@ class Main extends PluginBase{
     }
 
     public function onEntityDamageByEntity(EntityDamageByEntityEvent $event) : void{
-        $attacker = $event->getDamager();
-        if ($attacker instanceof Player) {
-            $name = $attacker->getName();
-            $playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
+    $attacker = $event->getDamager();
+    if ($attacker instanceof Player) {
+        $name = $attacker->getName();
+        $playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
 
-            if (isset($playerData["skills"]["combat"])) {
-                $level = $playerData["skills"]["combat"]["level"] ?? 0;
-                $event->setDamage($event->getDamage() * (1 + $level * 0.1));
-            }
+        if (isset($playerData["skills"]["combat"])) {
+            $level = $playerData["skills"]["combat"]["level"] ?? 0;
+            $multiplier = 1 + $level * 0.1;
+            $event->setModifier(
+                $event->getFinalDamage() * ($multiplier - 1),
+                EntityDamageByEntityEvent::MODIFIER_BASE
+            );
         }
     }
 
