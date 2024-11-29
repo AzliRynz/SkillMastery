@@ -1,0 +1,14 @@
+name: SkillMastery
+main: KnosTx\SkillMastery\Main
+version: 1.0.0
+api: 5.0.0
+author: KnosTx
+commands:
+  skills:
+    description: Open the skill management UI.
+    usage: /skills
+    permission: skillmastery.use
+permissions:
+  skillmastery.use:
+    description: Allows players to access the Skill Mastery system.
+    default: true
