@@ -145,6 +145,7 @@ class Main extends PluginBase{
             );
         }
     }
+    }
 
     public function onPlayerMove(PlayerMoveEvent $event) : void{
         $player = $event->getPlayer();
