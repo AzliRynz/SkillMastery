@@ -17,8 +17,8 @@ use pocketmine\utils\Config;
 use function array_keys;
 use function ucfirst;
 
-class Main extends PluginBase implements Listener
-{
+class Main extends PluginBase implements Listener{
+
 	private Config $playerData;
 
 	private Config $skillsConfig;
@@ -26,8 +26,7 @@ class Main extends PluginBase implements Listener
 	/**
 	 * Called when the plugin is enabled.
 	 */
-	public function onEnable() : void
-	{
+	public function onEnable() : void{
 		$this->saveResource("skills.yml");
 		$this->skillsConfig = new Config($this->getDataFolder() . "skills.yml", Config::YAML);
 		$this->playerData = new Config($this->getDataFolder() . "player_data.yml", Config::YAML);
@@ -38,18 +37,16 @@ class Main extends PluginBase implements Listener
 	/**
 	 * Called when the plugin is disabled.
 	 */
-	public function onDisable() : void
-	{
+	public function onDisable() : void{
 		$this->playerData->save();
 	}
 
 	/**
 	 * Handles the execution of commands.
 	 */
-	public function onCommand(CommandSender $sender, Command $command, string $label, array $args) : bool
-	{
-		if ($command->getName() === "skills") {
-			if ($sender instanceof Player) {
+	public function onCommand(CommandSender $sender, Command $command, string $label, array $args) : bool{
+		if($command->getName() === "skills"){
+			if($sender instanceof Player){
 				$this->showSkillUI($sender);
 				return true;
 			}
@@ -61,15 +58,12 @@ class Main extends PluginBase implements Listener
 	/**
 	 * Displays the skill selection UI to the player.
 	 */
-	private function showSkillUI(Player $player) : void
-	{
+	private function showSkillUI(Player $player) : void{
 		$name = $player->getName();
 		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
 
-		$form = new SimpleForm(function (Player $player, ?int $data) {
-			if ($data === null) {
-				return;
-			}
+		$form = new SimpleForm(function(Player $player, ?int $data){
+			if($data === null) return;
 
 			$skills = array_keys($this->skillsConfig->get("skills", []));
 			$selectedSkill = $skills[$data];
@@ -78,7 +72,7 @@ class Main extends PluginBase implements Listener
 
 		$form->setTitle("Skill Mastery");
 		$form->setContent("Select a skill to view details or upgrade:");
-		foreach ($this->skillsConfig->get("skills", []) as $skill => $info) {
+		foreach($this->skillsConfig->get("skills", []) as $skill => $info){
 			$level = $playerData["skills"][$skill]["level"] ?? 0;
 			$form->addButton(ucfirst($skill) . " (Level: $level)");
 		}
@@ -88,22 +82,17 @@ class Main extends PluginBase implements Listener
 	/**
 	 * Displays the details of a specific skill and the option to upgrade it.
 	 */
-	private function showSkillDetailUI(Player $player, string $skill) : void
-	{
+	private function showSkillDetailUI(Player $player, string $skill) : void{
 		$name = $player->getName();
 		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
 
 		$currentLevel = $playerData["skills"][$skill]["level"] ?? 0;
 		$xpNeeded = $this->skillsConfig->getNested("skills.$skill.levels")[$currentLevel + 1] ?? null;
 
-		$form = new SimpleForm(function (Player $player, ?int $data) use ($skill) {
-			if ($data === null) {
-				return;
-			}
+		$form = new SimpleForm(function(Player $player, ?int $data) use($skill){
+			if($data === null) return;
 
-			if ($data === 0) {
-				$this->upgradeSkill($player, $skill);
-			}
+			if($data === 0) $this->upgradeSkill($player, $skill);
 		});
 
 		$form->setTitle(ucfirst($skill));
@@ -119,26 +108,25 @@ class Main extends PluginBase implements Listener
 	/**
 	 * Attempts to upgrade the specified skill for the player.
 	 */
-	private function upgradeSkill(Player $player, string $skill) : void
-	{
+	private function upgradeSkill(Player $player, string $skill) : void{
 		$name = $player->getName();
 		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
 
 		$currentLevel = $playerData["skills"][$skill]["level"] ?? 0;
 		$xpNeeded = $this->skillsConfig->getNested("skills.$skill.levels")[$currentLevel + 1] ?? null;
 
-		if ($xpNeeded === null) {
+		if($xpNeeded === null){
 			$player->sendMessage("This skill is at max level!");
 			return;
 		}
 
-		if ($playerData["xp"] >= $xpNeeded) {
+		if($playerData["xp"] >= $xpNeeded){
 			$playerData["xp"] -= $xpNeeded;
 			$playerData["skills"][$skill]["level"] = $currentLevel + 1;
 			$this->playerData->set($name, $playerData);
 			$this->playerData->save();
 			$player->sendMessage("Your $skill skill has been upgraded to level " . ($currentLevel + 1) . "!");
-		} else {
+		} else{
 			$player->sendMessage("Not enough XP to upgrade this skill.");
 		}
 	}
@@ -146,8 +134,7 @@ class Main extends PluginBase implements Listener
 	/**
 	 * Adds XP to the player.
 	 */
-	public function addXP(Player $player, int $amount) : void
-	{
+	public function addXP(Player $player, int $amount) : void{
 		$name = $player->getName();
 		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
 
@@ -160,13 +147,12 @@ class Main extends PluginBase implements Listener
 	/**
 	 * Handles the BlockBreakEvent to grant XP for mining.
 	 */
-	public function onBlockBreak(BlockBreakEvent $event) : void
-	{
+	public function onBlockBreak(BlockBreakEvent $event) : void{
 		$player = $event->getPlayer();
 		$name = $player->getName();
 		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
 
-		if (isset($playerData["skills"]["mining"])) {
+		if(isset($playerData["skills"]["mining"])){
 			$level = $playerData["skills"]["mining"]["level"] ?? 0;
 			$xpGain = 10 * ($level + 1);
 			$this->addXP($player, $xpGain);
@@ -176,14 +162,13 @@ class Main extends PluginBase implements Listener
 	/**
 	 * Handles the EntityDamageByEntityEvent to increase combat damage.
 	 */
-	public function onEntityDamageByEntity(EntityDamageByEntityEvent $event) : void
-	{
+	public function onEntityDamageByEntity(EntityDamageByEntityEvent $event) : void{
 		$attacker = $event->getDamager();
-		if ($attacker instanceof Player) {
+		if($attacker instanceof Player){
 			$name = $attacker->getName();
 			$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
 
-			if (isset($playerData["skills"]["combat"])) {
+			if(isset($playerData["skills"]["combat"])){
 				$level = $playerData["skills"]["combat"]["level"] ?? 0;
 				$multiplier = 1 + $level * 0.1;
 				$baseDamage = $event->getBaseDamage();
@@ -195,13 +180,12 @@ class Main extends PluginBase implements Listener
 	/**
 	 * Handles the PlayerMoveEvent to adjust movement speed.
 	 */
-	public function onPlayerMove(PlayerMoveEvent $event) : void
-	{
+	public function onPlayerMove(PlayerMoveEvent $event) : void{
 		$player = $event->getPlayer();
 		$name = $player->getName();
 		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
 
-		if (isset($playerData["skills"]["athletics"])) {
+		if(isset($playerData["skills"]["athletics"])){
 			$level = $playerData["skills"]["athletics"]["level"] ?? 0;
 			$player->setMovementSpeed(0.1 + $level * 0.01);
 		}
