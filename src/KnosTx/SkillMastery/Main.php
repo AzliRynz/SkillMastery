@@ -131,21 +131,19 @@ class Main extends PluginBase{
     }
 
     public function onEntityDamageByEntity(EntityDamageByEntityEvent $event) : void{
-        $attacker = $event->getDamager();
-        if ($attacker instanceof Player) {
-            $name = $attacker->getName();
-            $playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
+		$attacker = $event->getDamager();
+		if ($attacker instanceof Player) {
+			$name = $attacker->getName();
+			$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
 
-            if (isset($playerData["skills"]["combat"])) {
-                $level = $playerData["skills"]["combat"]["level"] ?? 0;
-                $multiplier = 1 + $level * 0.1;
-                $event->setModifier(
-                    $event->getFinalDamage() * ($multiplier - 1),
-                    EntityDamageByEntityEvent::MODIFIER_BASE
-            );
-        }
-    }
-    }
+			if (isset($playerData["skills"]["combat"])) {
+				$level = $playerData["skills"]["combat"]["level"] ?? 0;
+				$multiplier = 1 + $level * 0.1;
+				$baseDamage = $event->getBaseDamage();
+				$event->setBaseDamage($baseDamage * $multiplier);
+			}
+		}
+	}
 
     public function onPlayerMove(PlayerMoveEvent $event) : void{
         $player = $event->getPlayer();
