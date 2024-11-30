@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace KnosTx\SkillMastery;
 
 use jojoe77777\FormAPI\SimpleForm;
@@ -12,242 +14,196 @@ use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Config;
+use function array_keys;
+use function ucfirst;
 
 class Main extends PluginBase implements Listener
 {
-    /**
-     * @var Config
-     */
-    private Config $playerData;
+	private Config $playerData;
 
-    /**
-     * @var Config
-     */
-    private Config $skillsConfig;
+	private Config $skillsConfig;
 
-    /**
-     * Called when the plugin is enabled.
-     *
-     * @return void
-     */
-    public function onEnable(): void
-    {
-        $this->saveResource("skills.yml");
-        $this->skillsConfig = new Config($this->getDataFolder() . "skills.yml", Config::YAML);
-        $this->playerData   = new Config($this->getDataFolder() . "player_data.yml", Config::YAML);
+	/**
+	 * Called when the plugin is enabled.
+	 */
+	public function onEnable() : void
+	{
+		$this->saveResource("skills.yml");
+		$this->skillsConfig = new Config($this->getDataFolder() . "skills.yml", Config::YAML);
+		$this->playerData = new Config($this->getDataFolder() . "player_data.yml", Config::YAML);
 
-        $this->getServer()->getPluginManager()->registerEvents($this, $this);
-    }
+		$this->getServer()->getPluginManager()->registerEvents($this, $this);
+	}
 
-    /**
-     * Called when the plugin is disabled.
-     *
-     * @return void
-     */
-    public function onDisable(): void
-    {
-        $this->playerData->save();
-    }
+	/**
+	 * Called when the plugin is disabled.
+	 */
+	public function onDisable() : void
+	{
+		$this->playerData->save();
+	}
 
-    /**
-     * Handles the execution of commands.
-     *
-     * @param CommandSender $sender
-     * @param Command $command
-     * @param string $label
-     * @param array $args
-     *
-     * @return bool
-     */
-    public function onCommand(CommandSender $sender, Command $command, string $label, array $args): bool
-    {
-        if ($command->getName() === "skills") {
-            if ($sender instanceof Player) {
-                $this->showSkillUI($sender);
-                return true;
-            }
-            $sender->sendMessage("This command is only for players!");
-        }
-        return false;
-    }
+	/**
+	 * Handles the execution of commands.
+	 */
+	public function onCommand(CommandSender $sender, Command $command, string $label, array $args) : bool
+	{
+		if ($command->getName() === "skills") {
+			if ($sender instanceof Player) {
+				$this->showSkillUI($sender);
+				return true;
+			}
+			$sender->sendMessage("This command is only for players!");
+		}
+		return false;
+	}
 
-    /**
-     * Displays the skill selection UI to the player.
-     *
-     * @param Player $player
-     *
-     * @return void
-     */
-    private function showSkillUI(Player $player): void
-    {
-        $name       = $player->getName();
-        $playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
+	/**
+	 * Displays the skill selection UI to the player.
+	 */
+	private function showSkillUI(Player $player) : void
+	{
+		$name = $player->getName();
+		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
 
-        $form = new SimpleForm(function (Player $player, ?int $data) {
-            if ($data === null) {
-                return;
-            }
+		$form = new SimpleForm(function (Player $player, ?int $data) {
+			if ($data === null) {
+				return;
+			}
 
-            $skills        = array_keys($this->skillsConfig->get("skills", []));
-            $selectedSkill = $skills[$data];
-            $this->showSkillDetailUI($player, $selectedSkill);
-        });
+			$skills = array_keys($this->skillsConfig->get("skills", []));
+			$selectedSkill = $skills[$data];
+			$this->showSkillDetailUI($player, $selectedSkill);
+		});
 
-        $form->setTitle("Skill Mastery");
-        $form->setContent("Select a skill to view details or upgrade:");
-        foreach ($this->skillsConfig->get("skills", []) as $skill => $info) {
-            $level = $playerData["skills"][$skill]["level"] ?? 0;
-            $form->addButton(ucfirst($skill) . " (Level: $level)");
-        }
-        $player->sendForm($form);
-    }
+		$form->setTitle("Skill Mastery");
+		$form->setContent("Select a skill to view details or upgrade:");
+		foreach ($this->skillsConfig->get("skills", []) as $skill => $info) {
+			$level = $playerData["skills"][$skill]["level"] ?? 0;
+			$form->addButton(ucfirst($skill) . " (Level: $level)");
+		}
+		$player->sendForm($form);
+	}
 
-    /**
-     * Displays the details of a specific skill and the option to upgrade it.
-     *
-     * @param Player $player
-     * @param string $skill
-     *
-     * @return void
-     */
-    private function showSkillDetailUI(Player $player, string $skill): void
-    {
-        $name       = $player->getName();
-        $playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
+	/**
+	 * Displays the details of a specific skill and the option to upgrade it.
+	 */
+	private function showSkillDetailUI(Player $player, string $skill) : void
+	{
+		$name = $player->getName();
+		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
 
-        $currentLevel = $playerData["skills"][$skill]["level"]                                ?? 0;
-        $xpNeeded     = $this->skillsConfig->getNested("skills.$skill.levels")[$currentLevel + 1] ?? null;
+		$currentLevel = $playerData["skills"][$skill]["level"] ?? 0;
+		$xpNeeded = $this->skillsConfig->getNested("skills.$skill.levels")[$currentLevel + 1] ?? null;
 
-        $form = new SimpleForm(function (Player $player, ?int $data) use ($skill) {
-            if ($data === null) {
-                return;
-            }
+		$form = new SimpleForm(function (Player $player, ?int $data) use ($skill) {
+			if ($data === null) {
+				return;
+			}
 
-            if ($data === 0) {
-                $this->upgradeSkill($player, $skill);
-            }
-        });
+			if ($data === 0) {
+				$this->upgradeSkill($player, $skill);
+			}
+		});
 
-        $form->setTitle(ucfirst($skill));
-        $form->setContent(
-            "Current Level: $currentLevel\n" .
-            "XP Needed for Next Level: " . ($xpNeeded ?? "Max Level")
-        );
-        $form->addButton("Upgrade Skill");
-        $form->addButton("Back");
-        $player->sendForm($form);
-    }
+		$form->setTitle(ucfirst($skill));
+		$form->setContent(
+			"Current Level: $currentLevel\n" .
+			"XP Needed for Next Level: " . ($xpNeeded ?? "Max Level")
+		);
+		$form->addButton("Upgrade Skill");
+		$form->addButton("Back");
+		$player->sendForm($form);
+	}
 
-    /**
-     * Attempts to upgrade the specified skill for the player.
-     *
-     * @param Player $player
-     * @param string $skill
-     *
-     * @return void
-     */
-    private function upgradeSkill(Player $player, string $skill): void
-    {
-        $name       = $player->getName();
-        $playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
+	/**
+	 * Attempts to upgrade the specified skill for the player.
+	 */
+	private function upgradeSkill(Player $player, string $skill) : void
+	{
+		$name = $player->getName();
+		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
 
-        $currentLevel = $playerData["skills"][$skill]["level"]                                ?? 0;
-        $xpNeeded     = $this->skillsConfig->getNested("skills.$skill.levels")[$currentLevel + 1] ?? null;
+		$currentLevel = $playerData["skills"][$skill]["level"] ?? 0;
+		$xpNeeded = $this->skillsConfig->getNested("skills.$skill.levels")[$currentLevel + 1] ?? null;
 
-        if ($xpNeeded === null) {
-            $player->sendMessage("This skill is at max level!");
-            return;
-        }
+		if ($xpNeeded === null) {
+			$player->sendMessage("This skill is at max level!");
+			return;
+		}
 
-        if ($playerData["xp"] >= $xpNeeded) {
-            $playerData["xp"] -= $xpNeeded;
-            $playerData["skills"][$skill]["level"] = $currentLevel + 1;
-            $this->playerData->set($name, $playerData);
-            $this->playerData->save();
-            $player->sendMessage("Your $skill skill has been upgraded to level " . ($currentLevel + 1) . "!");
-        } else {
-            $player->sendMessage("Not enough XP to upgrade this skill.");
-        }
-    }
+		if ($playerData["xp"] >= $xpNeeded) {
+			$playerData["xp"] -= $xpNeeded;
+			$playerData["skills"][$skill]["level"] = $currentLevel + 1;
+			$this->playerData->set($name, $playerData);
+			$this->playerData->save();
+			$player->sendMessage("Your $skill skill has been upgraded to level " . ($currentLevel + 1) . "!");
+		} else {
+			$player->sendMessage("Not enough XP to upgrade this skill.");
+		}
+	}
 
-    /**
-     * Adds XP to the player.
-     *
-     * @param Player $player
-     * @param int $amount
-     *
-     * @return void
-     */
-    public function addXP(Player $player, int $amount): void
-    {
-        $name       = $player->getName();
-        $playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
+	/**
+	 * Adds XP to the player.
+	 */
+	public function addXP(Player $player, int $amount) : void
+	{
+		$name = $player->getName();
+		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
 
-        $playerData["xp"] += $amount;
-        $this->playerData->set($name, $playerData);
-        $this->playerData->save();
-        $player->sendMessage("You gained $amount XP!");
-    }
+		$playerData["xp"] += $amount;
+		$this->playerData->set($name, $playerData);
+		$this->playerData->save();
+		$player->sendMessage("You gained $amount XP!");
+	}
 
-    /**
-     * Handles the BlockBreakEvent to grant XP for mining.
-     *
-     * @param BlockBreakEvent $event
-     *
-     * @return void
-     */
-    public function onBlockBreak(BlockBreakEvent $event): void
-    {
-        $player     = $event->getPlayer();
-        $name       = $player->getName();
-        $playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
+	/**
+	 * Handles the BlockBreakEvent to grant XP for mining.
+	 */
+	public function onBlockBreak(BlockBreakEvent $event) : void
+	{
+		$player = $event->getPlayer();
+		$name = $player->getName();
+		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
 
-        if (isset($playerData["skills"]["mining"])) {
-            $level  = $playerData["skills"]["mining"]["level"] ?? 0;
-            $xpGain = 10 * ($level + 1);
-            $this->addXP($player, $xpGain);
-        }
-    }
+		if (isset($playerData["skills"]["mining"])) {
+			$level = $playerData["skills"]["mining"]["level"] ?? 0;
+			$xpGain = 10 * ($level + 1);
+			$this->addXP($player, $xpGain);
+		}
+	}
 
-    /**
-     * Handles the EntityDamageByEntityEvent to increase combat damage.
-     *
-     * @param EntityDamageByEntityEvent $event
-     *
-     * @return void
-     */
-    public function onEntityDamageByEntity(EntityDamageByEntityEvent $event): void
-    {
-        $attacker = $event->getDamager();
-        if ($attacker instanceof Player) {
-            $name       = $attacker->getName();
-            $playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
+	/**
+	 * Handles the EntityDamageByEntityEvent to increase combat damage.
+	 */
+	public function onEntityDamageByEntity(EntityDamageByEntityEvent $event) : void
+	{
+		$attacker = $event->getDamager();
+		if ($attacker instanceof Player) {
+			$name = $attacker->getName();
+			$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
 
-            if (isset($playerData["skills"]["combat"])) {
-                $level      = $playerData["skills"]["combat"]["level"] ?? 0;
-                $multiplier = 1 + $level * 0.1;
-                $baseDamage = $event->getBaseDamage();
-                $event->setBaseDamage($baseDamage * $multiplier);
-            }
-        }
-    }
+			if (isset($playerData["skills"]["combat"])) {
+				$level = $playerData["skills"]["combat"]["level"] ?? 0;
+				$multiplier = 1 + $level * 0.1;
+				$baseDamage = $event->getBaseDamage();
+				$event->setBaseDamage($baseDamage * $multiplier);
+			}
+		}
+	}
 
-    /**
-     * Handles the PlayerMoveEvent to adjust movement speed.
-     *
-     * @param PlayerMoveEvent $event
-     *
-     * @return void
-     */
-    public function onPlayerMove(PlayerMoveEvent $event): void
-    {
-        $player     = $event->getPlayer();
-        $name       = $player->getName();
-        $playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
+	/**
+	 * Handles the PlayerMoveEvent to adjust movement speed.
+	 */
+	public function onPlayerMove(PlayerMoveEvent $event) : void
+	{
+		$player = $event->getPlayer();
+		$name = $player->getName();
+		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
 
-        if (isset($playerData["skills"]["athletics"])) {
-            $level = $playerData["skills"]["athletics"]["level"] ?? 0;
-            $player->setMovementSpeed(0.1 + $level * 0.01);
-        }
-    }
+		if (isset($playerData["skills"]["athletics"])) {
+			$level = $playerData["skills"]["athletics"]["level"] ?? 0;
+			$player->setMovementSpeed(0.1 + $level * 0.01);
+		}
+	}
 }
