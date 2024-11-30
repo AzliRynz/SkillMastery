@@ -4,6 +4,7 @@ namespace KnosTx\SkillMastery;
 
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
+use pocketmine\event\Listener;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\player\PlayerMoveEvent;
@@ -13,7 +14,7 @@ use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Config;
 use jojoe77777\FormAPI\SimpleForm;
 
-class Main extends PluginBase{
+class Main extends PluginBase implements Listener{
 
     private Config $playerData;
     private Config $skillsConfig;
