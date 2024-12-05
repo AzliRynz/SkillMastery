@@ -151,7 +151,7 @@ class Main extends PluginBase implements Listener{
 		$player = $event->getPlayer();
 		$name = $player->getName();
 		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
-
+		
 		if(isset($playerData["skills"]["mining"])){
 			$level = $playerData["skills"]["mining"]["level"] ?? 0;
 			$xpGain = 10 * ($level + 1);
