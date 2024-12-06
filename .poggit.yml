@@ -1,4 +1,4 @@
---- # Poggit-CI Manifest. Open the CI at https://poggit.pmmp.io/ci/ClousClouds/SkillMastery
+--- # Poggit-CI Manifest. Open the CI at https://poggit.pmmp.io/ci/KnosTx/SkillMastery
 build-by-default: true
 branches:
 - master
