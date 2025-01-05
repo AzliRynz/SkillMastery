@@ -33,16 +33,10 @@ class Main extends PluginBase implements Listener{
 		$this->getServer()->getPluginManager()->registerEvents($this, $this);
 	}
 
-	/**
-	 * Called when the plugin is disabled.
-	 */
 	public function onDisable() : void{
 		$this->playerData->save();
 	}
 
-	/**
-	 * Handles the execution of commands.
-	 */
 	public function onCommand(CommandSender $sender, Command $command, string $label, array $args) : bool{
 		if($command->getName() === "skills"){
 			if($sender instanceof Player){
@@ -54,9 +48,6 @@ class Main extends PluginBase implements Listener{
 		return false;
 	}
 
-	/**
-	 * Displays the skill selection UI to the player.
-	 */
 	private function showSkillUI(Player $player) : void{
 		$name = $player->getName();
 		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
@@ -78,9 +69,6 @@ class Main extends PluginBase implements Listener{
 		$player->sendForm($form);
 	}
 
-	/**
-	 * Displays the details of a specific skill and the option to upgrade it.
-	 */
 	private function showSkillDetailUI(Player $player, string $skill) : void{
 		$name = $player->getName();
 		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
@@ -104,9 +92,6 @@ class Main extends PluginBase implements Listener{
 		$player->sendForm($form);
 	}
 
-	/**
-	 * Attempts to upgrade the specified skill for the player.
-	 */
 	private function upgradeSkill(Player $player, string $skill) : void{
 		$name = $player->getName();
 		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
@@ -130,9 +115,6 @@ class Main extends PluginBase implements Listener{
 		}
 	}
 
-	/**
-	 * Adds XP to the player.
-	 */
 	public function addXP(Player $player, int $amount) : void{
 		$name = $player->getName();
 		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
@@ -143,9 +125,6 @@ class Main extends PluginBase implements Listener{
 		$player->sendMessage("You gained $amount XP!");
 	}
 
-	/**
-	 * Handles the BlockBreakEvent to grant XP for mining.
-	 */
 	public function onBlockBreak(BlockBreakEvent $event) : void{
 		$player = $event->getPlayer();
 		$name = $player->getName();
@@ -158,9 +137,6 @@ class Main extends PluginBase implements Listener{
 		}
 	}
 
-	/**
-	 * Handles the EntityDamageByEntityEvent to increase combat damage.
-	 */
 	public function onEntityDamageByEntity(EntityDamageByEntityEvent $event) : void{
 		$attacker = $event->getDamager();
 		if($attacker instanceof Player){
@@ -175,7 +151,7 @@ class Main extends PluginBase implements Listener{
 			}
 		}
 		
-		public function onPlayerMove(PlayerMoveEvent $event) : void{
+	public function onPlayerMove(PlayerMoveEvent $event) : void{
 		$player = $event->getPlayer();
 		$name = $player->getName();
 		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
