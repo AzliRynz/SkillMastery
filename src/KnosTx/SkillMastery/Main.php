@@ -18,7 +18,6 @@ use function array_keys;
 use function ucfirst;
 
 class Main extends PluginBase implements Listener{
-
 	private Config $playerData;
 
 	private Config $skillsConfig;
@@ -175,12 +174,8 @@ class Main extends PluginBase implements Listener{
 				$event->setBaseDamage($baseDamage * $multiplier);
 			}
 		}
-	}
-
-	/**
-	 * Handles the PlayerMoveEvent to adjust movement speed.
-	 */
-	public function onPlayerMove(PlayerMoveEvent $event) : void{
+		
+		public function onPlayerMove(PlayerMoveEvent $event) : void{
 		$player = $event->getPlayer();
 		$name = $player->getName();
 		$playerData = $this->playerData->get($name, ["xp" => 0, "skills" => []]);
