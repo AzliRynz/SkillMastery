@@ -150,6 +150,7 @@ class Main extends PluginBase implements Listener{
 				$event->setBaseDamage($baseDamage * $multiplier);
 			}
 		}
+	}
 		
 	public function onPlayerMove(PlayerMoveEvent $event) : void{
 		$player = $event->getPlayer();
