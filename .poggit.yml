@@ -1,4 +1,4 @@
---- # Poggit-CI Manifest. Open the CI at https://poggit.pmmp.io/ci/KnosTx/SkillMastery
+--- # Poggit-CI Manifest. Open the CI at https://poggit.pmmp.io/ci/AzliRynz/SkillMastery
 build-by-default: true
 branches:
 - master
